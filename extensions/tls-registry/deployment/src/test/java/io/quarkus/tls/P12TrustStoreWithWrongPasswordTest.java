@@ -31,7 +31,7 @@ public class P12TrustStoreWithWrongPasswordTest {
     static final QuarkusUnitTest config = new QuarkusUnitTest().setArchiveProducer(
             () -> ShrinkWrap.create(JavaArchive.class)
                     .add(new StringAsset(configuration), "application.properties"))
-            .assertException(t -> assertThat(t.getMessage()).contains("default", "P12", "password", "trust"));
+            .assertException(t -> assertThat(t.getMessage()).contains("default", "PKCS12", "password", "trust"));
 
     @Test
     void test() throws KeyStoreException, CertificateParsingException {

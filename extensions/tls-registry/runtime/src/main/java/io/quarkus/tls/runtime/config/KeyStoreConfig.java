@@ -1,11 +1,16 @@
 package io.quarkus.tls.runtime.config;
 
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeSet;
 
 import io.quarkus.arc.InstanceHandle;
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.tls.runtime.KeyStoreProvider;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithParentName;
 
 @ConfigGroup
 public interface KeyStoreConfig {
@@ -18,12 +23,14 @@ public interface KeyStoreConfig {
     /**
      * Configure the PKCS12 key store.
      */
-    Optional<P12KeyStoreConfig> p12();
+    Optional<KeyStoreFileConfig> p12();
 
     /**
-     * Configure the JKS key store.
+     * Configures a key store file. The key is the type of the key store e.g. JKS, P12, PKCS12
      */
-    Optional<JKSKeyStoreConfig> jks();
+    @ConfigDocMapKey("key-store-type")
+    @WithParentName
+    Map<String, KeyStoreFileConfig> keyStoreFiles();
 
     /**
      * Enables Server Name Indication (SNI).
@@ -51,22 +58,20 @@ public interface KeyStoreConfig {
     KeyStoreCredentialProviderConfig credentialsProvider();
 
     default void validate(InstanceHandle<KeyStoreProvider> provider, String name) {
-        if (provider.isAvailable() && (pem().isPresent() || p12().isPresent() || jks().isPresent())) {
-            throw new IllegalStateException(
-                    "Invalid truststore '" + name
-                            + "' - The keystore cannot be configured with a provider and PEM or PKCS12 or JKS at the same time");
+        // Collect all enabled key store types including `KeyStoreProvider` beans and ensure that only one type of
+        // keystore is enabled
+        var enabledKeyStoreTypes = new TreeSet(String.CASE_INSENSITIVE_ORDER);
+        if (provider.isAvailable()) {
+            // Prepend "a " for readability in the exception message below
+            enabledKeyStoreTypes.add("a " + KeyStoreProvider.class.getSimpleName());
         }
+        pem().ifPresent(c -> enabledKeyStoreTypes.add("PEM"));
+        p12().ifPresent(c -> enabledKeyStoreTypes.add("P12"));
+        keyStoreFiles().keySet().forEach(t -> enabledKeyStoreTypes.add(t.toUpperCase(Locale.ROOT)));
 
-        if (pem().isPresent() && (p12().isPresent() || jks().isPresent())) {
-            throw new IllegalStateException(
-                    "Invalid keystore '" + name
-                            + "' - The keystore cannot be configured with PEM and PKCS12 or JKS at the same time");
-        }
-
-        if (p12().isPresent() && jks().isPresent()) {
-            throw new IllegalStateException(
-                    "Invalid keystore '" + name + "' - The keystore cannot be configured with PKCS12 and JKS at the same time");
+        if (enabledKeyStoreTypes.size() > 1) {
+            throw new IllegalStateException("Invalid keystore '" + name + "' - The keystore cannot be configured with "
+                    + String.join(" and ", enabledKeyStoreTypes) + " at the same time");
         }
     }
-
 }

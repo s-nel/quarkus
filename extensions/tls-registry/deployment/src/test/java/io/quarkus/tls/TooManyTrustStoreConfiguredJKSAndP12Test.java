@@ -31,7 +31,7 @@ public class TooManyTrustStoreConfiguredJKSAndP12Test {
             () -> ShrinkWrap.create(JavaArchive.class)
                     .add(new StringAsset(configuration), "application.properties"))
             .assertException(t -> {
-                assertThat(t).hasMessageContaining("PKCS12", "JKS", "trust");
+                assertThat(t).hasMessageContaining("P12", "JKS", "trust");
             });
 
     @Test

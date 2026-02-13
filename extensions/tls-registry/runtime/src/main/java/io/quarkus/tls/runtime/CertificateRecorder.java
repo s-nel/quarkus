@@ -3,6 +3,7 @@ package io.quarkus.tls.runtime;
 import java.security.KeyStoreException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -21,8 +22,7 @@ import io.quarkus.tls.TlsConfiguration;
 import io.quarkus.tls.TlsConfigurationRegistry;
 import io.quarkus.tls.runtime.config.TlsBucketConfig;
 import io.quarkus.tls.runtime.config.TlsConfig;
-import io.quarkus.tls.runtime.keystores.JKSKeyStores;
-import io.quarkus.tls.runtime.keystores.P12KeyStores;
+import io.quarkus.tls.runtime.keystores.FileKeyStores;
 import io.quarkus.tls.runtime.keystores.PemKeyStores;
 import io.smallrye.common.annotation.Identifier;
 import io.vertx.core.Vertx;
@@ -138,9 +138,12 @@ public class CertificateRecorder implements TlsConfigurationRegistry {
                 if (config.pem().isPresent()) {
                     return PemKeyStores.verifyPEMKeyStore(config, vertx, name);
                 } else if (config.p12().isPresent()) {
-                    return P12KeyStores.verifyP12KeyStore(config, vertx, name);
-                } else if (config.jks().isPresent()) {
-                    return JKSKeyStores.verifyJKSKeyStore(config, vertx, name);
+                    return FileKeyStores.verifyKeyStoreFile(config, config.p12().get(), vertx, name, "PKCS12");
+                } else if (!config.keyStoreFiles().isEmpty()) {
+                    // Already validated that there is only one store configured
+                    var firstFile = config.keyStoreFiles().entrySet().iterator().next();
+                    return FileKeyStores.verifyKeyStoreFile(config, firstFile.getValue(), vertx, name,
+                            firstFile.getKey().toUpperCase(Locale.ROOT));
                 }
             }
 
@@ -162,9 +165,12 @@ public class CertificateRecorder implements TlsConfigurationRegistry {
                 if (config.pem().isPresent()) {
                     return PemKeyStores.verifyPEMTrustStoreStore(config, vertx, name);
                 } else if (config.p12().isPresent()) {
-                    return P12KeyStores.verifyP12TrustStoreStore(config, vertx, name);
-                } else if (config.jks().isPresent()) {
-                    return JKSKeyStores.verifyJKSTrustStoreStore(config, vertx, name);
+                    return FileKeyStores.verifyTrustStoreFile(config, config.p12().get(), vertx, name, "PKCS12");
+                } else if (!config.trustStoreFiles().isEmpty()) {
+                    // Already validated that there is only one store configured
+                    var firstFile = config.trustStoreFiles().entrySet().iterator().next();
+                    return FileKeyStores.verifyTrustStoreFile(config, firstFile.getValue(), vertx, name,
+                            firstFile.getKey().toUpperCase(Locale.ROOT));
                 }
             }
 

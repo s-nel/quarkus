@@ -6,10 +6,9 @@ import java.util.Optional;
 import io.quarkus.runtime.annotations.ConfigGroup;
 
 @ConfigGroup
-public interface P12TrustStoreConfig {
-
+public interface TrustStoreFileConfig {
     /**
-     * Path to the trust store file (P12 / PFX format).
+     * Path to the trust store file
      */
     Path path();
 
@@ -20,7 +19,7 @@ public interface P12TrustStoreConfig {
     Optional<String> password();
 
     /**
-     * Alias of the trust store.
+     * Alias of the key in the trust store.
      */
     Optional<String> alias();
 

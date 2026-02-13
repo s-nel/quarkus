@@ -32,7 +32,7 @@ public class MissingP12TrustStoreFromClassPathTest {
             () -> ShrinkWrap.create(JavaArchive.class)
                     .add(new StringAsset(configuration), "application.properties"))
             .assertException(t -> {
-                assertThat(t.getMessage()).contains("default", "P12", "file", "missing.p12", "trust");
+                assertThat(t.getMessage()).contains("default", "PKCS12", "file", "missing.p12", "trust");
             });
 
     @Test

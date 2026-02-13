@@ -6,10 +6,9 @@ import java.util.Optional;
 import io.quarkus.runtime.annotations.ConfigGroup;
 
 @ConfigGroup
-public interface JKSKeyStoreConfig {
-
+public interface KeyStoreFileConfig {
     /**
-     * Path to the keystore file (JKS format).
+     * Path to the keystore file
      */
     Path path();
 
@@ -34,5 +33,4 @@ public interface JKSKeyStoreConfig {
      * Provider of the key store.
      */
     Optional<String> provider();
-
 }
